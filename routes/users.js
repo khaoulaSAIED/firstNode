@@ -86,7 +86,7 @@ router.route("/update").post(function(req, res) {
     
 });*/
 
-/************UPDATE */
+/************UPDATE NEwwww */
 router.put('/updateUser/:id', async(req, res, next)=>{
    const user = await User.findByIdAndUpdate(req.params.id,
    { age: req.query.age,
