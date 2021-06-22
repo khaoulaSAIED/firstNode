@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
-const User = require ('../models/userSchema')
+const User = require ('../models/userSchema');
+const Todo = require ('../models/todoSchema');
+const nodemailer = require("nodemailer");
+const { getMaxListeners } = require('../models/userSchema');
+
+//process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 ///definir les routes sous users
 
@@ -38,6 +43,44 @@ router.post('/addUser', async(req, res, next)=>{
   res.json(user);
   
 });
+
+
+//******ADD-TODO-TO-USER
+router.post('/affectTodoToUser/:userId/:todoId', async(req, res, next)=>{
+  const todo = await Todo.findById(req.params.todoId);//Vérifier si TODO exist avant d affecter au user
+  const user = await User.findById(req.params.userId);
+  console.log(todo);
+  if (!todo){ 
+    console.log("Id introuvable");
+     res.json(`No todo with that id of ${req.params.todoId}`);
+   // res.json(err);
+  }
+  
+  else if(!user)
+   {console.log("User introuvable");
+    res.json(`No user with that id of ${req.params.userId}`);
+   }
+    else{
+const user = await User.findByIdAndUpdate(req.params.userId, {$push :{todo: req.params.todoId}});
+ res.json(user);
+  }
+});
+/*
+//******ADD-TODO-TO-USER
+router.post('/affectTodoToUser/:userId/:todoId', async(req, res, next)=>{
+ // const todo = await Todo.findById(req.params.todoId);//Vérifier si TODO exist avant d affecter au user
+  //console.log(todo);
+  
+const user = await User.findByIdAndUpdate(req.params.userId, {$push :{todo: req.params.todoId}});
+ res.json(user)
+  
+});*/
+//******Delete-TODO-From-USER
+router.post('/deleteTodoFromUser/:userId/:todoId', async(req, res, next)=>{
+  const user = await User.findByIdAndUpdate(req.params.userId, {$pull :{todo: req.params.todoId}});
+  //on lui donne deux id, le premier celui du user qu on cherche, le deuxieme celui du todo qu on veut suupprimer
+  res.json(user);
+  });
 
 //******DELETE */
 router.delete('/deleteUser/:id', async(req, res, next)=>{
@@ -97,5 +140,39 @@ router.put('/updateUser/:id', async(req, res, next)=>{
      
  });
 
+//API:Envoyer un email
+// router.put('/SendEmailToUser/:idSender/:idReceiver', async(req, res, next)=>{
+  router.put('/SendEmailToUser', async(req, res, next)=>{
 
+
+// async..await is not allowed in global scope, must use a wrapper
+//async function main() {
+  // Generate test SMTP service account from ethereal.email
+ 
+  // Only needed if you don't have a real mail account for testing
+  //let testAccount = await nodemailer.createTestAccount();
+
+  // create reusable transporter object using the default SMTP transport
+  let transporter = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+     user: "khaoula.saied@gmail.com",//sender
+     pass: "halima2020@",
+    },
+  });
+
+  // send mail with defined transport object
+  let info= await transporter.sendMail({
+    from: 'khaoula.saied@gmail.com', // sender address
+    to: "saied.roukaya@gmail.com", // list of receivers
+    subject: "Hello ✔", // Subject line
+    text: "Hello world?", // plain text body
+    html: "<b>Hello world?</b>", // html body
+  });
+
+
+});
+///////////
 module.exports = router;

@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 
 var usersRouter = require('./routes/users');
-
+var todosRouter = require('./routes/todo');
 var app = express();
 
 require('./config/database')//import du database
@@ -21,6 +21,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);// on a inséré users
+app.use('/todo', todosRouter);// on a inséré todo
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
