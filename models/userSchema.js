@@ -7,6 +7,9 @@ var userSchema = new Schema (
     age : {type: Number},
     todo : [{type: Schema.Types.ObjectId, ref: 'Todo'}],//référence mongoose, []un tableau de todo
     //email: {type: mongoose.SchemaTypes.Email, required: true}
-    email: {type: String}
+    email: {type: String},//controle de saisie fel front yssir
+    photo: {type: String},
+    password: {type: String}
+
 });
 module.exports = mongoose.model('User',userSchema);//nom du schema= User

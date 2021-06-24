@@ -11,9 +11,9 @@ var app = express();
 
 require('./config/database')//import du database
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'jade');
+app.use('/uploads', express.static('uploads'));//pour sauvegarder l image
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

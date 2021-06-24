@@ -4,7 +4,28 @@ const User = require ('../models/userSchema');
 const Todo = require ('../models/todoSchema');
 const nodemailer = require("nodemailer");
 const { getMaxListeners } = require('../models/userSchema');
+//Envoi d image
+var multer  = require('multer')
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, './uploads/');//le chemin du fichier où on va stocker la photo: uploads
+  },
+  filename: function(req, file, cb) {
+    cb(null, new Date().toISOString().replace(/:/g, '-') + file.originalname);
+  }
+});
+const upload = multer({
+  storage: storage,
+});
+///////////////////////////Fin Envoi d image Voir API
 
+//Pour crypter
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const myPlaintextPassword = 's0/\/\P4$$w0rD';
+const someOtherPlaintextPassword = 'not_bacon';
+
+//////////FIn crypter
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
 ///definir les routes sous users
@@ -61,7 +82,7 @@ router.post('/affectTodoToUser/:userId/:todoId', async(req, res, next)=>{
     res.json(`No user with that id of ${req.params.userId}`);
    }
     else{
-const user = await User.findByIdAndUpdate(req.params.userId, {$push :{todo: req.params.todoId}});
+const user = await User.findByIdAndUpdate(req.params.userId, {$push :{todo: req.params.todoId}});//$push et pull=utile uniquement pour un tableau
  res.json(user);
   }
 });
@@ -154,25 +175,84 @@ router.put('/updateUser/:id', async(req, res, next)=>{
 
   // create reusable transporter object using the default SMTP transport
   let transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
+    service: 'gmail',
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
      user: "khaoula.saied@gmail.com",//sender
-     pass: "halima2020@",
+     pass: "halima2020@",//mot d passe du sender
     },
   });
 
   // send mail with defined transport object
   let info= await transporter.sendMail({
     from: 'khaoula.saied@gmail.com', // sender address
-    to: "saied.roukaya@gmail.com", // list of receivers
+    to: "khaoula.saied@gmail.com", // list of receivers
     subject: "Hello ✔", // Subject line
     text: "Hello world?", // plain text body
     html: "<b>Hello world?</b>", // html body
   });
-
+  res.json("Mail Sent!");
 
 });
-///////////
+
+//Api ajout d image to a user
+ router.post('/AffectPhotoToUser/:userId', upload.single('photo'), async(req, res, next)=> {
+  // req.file is the `photo` file
+  //upload.single('photo'), photo c  key du file ds postman 
+ await User.findByIdAndUpdate(req.params.userId, {photo: req.file.path});
+  console.log(req.file);
+  res.json("Photo added!");
+})
+
+//API envoyer un fichier de type image from one user to another
+
+router.put('/SendEmailToUserWithFile', async(req, res, next)=>{
+    let transporter = nodemailer.createTransport({
+      service: 'gmail',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+       user: "khaoula.saied@gmail.com",//sender
+       pass: "halima2020@",//mot d passe du sender
+      },
+    });
+  
+    // send mail with defined transport object
+    await transporter.sendMail({
+      from: "khaoula.saied@gmail.com", // sender address//req.query.IdSender
+      to: "khaoula.saied@gmail.com", // list of receivers//req.query.IdReceiver
+      subject: "Hello ✔", // Subject line
+      text: "Hello world?", // plain text body
+      html: `<b>Hello world?</b><a href='localhost:3000/${req.file.path}'>click here</a>`, // html body
+      //file: req.query.photo
+      //or
+      // attachments: [{
+      // filename: 'airplane.png',//req.query.photo
+      // path: 'https://homepages.cae.wisc.edu/~ece533/images/airplane.png'}]
+    });
+    res.json("Photo Sent in Mail!");
+  
+  });
+  router.put('/addPasswordToUser/:id', async(req, res, next)=>{
+    bcrypt.genSalt(saltRounds, async(err, salt)=> {
+  //    bcrypt.hash(myPlaintextPassword, salt, async(err, hash)=> {
+    bcrypt.hash(res.query.password, salt, async(err, hash)=> {
+          // Store hash in your password DB.
+    await User.findByIdAndUpdate(req.params.id, {password: hash});
+      });
+  });
+  res.json("Password encrypted!");
+  });
+
+  //check if password is correct à voir
+  router.get('/checkPassword/:id', async(req, res, next)=>{
+  // Load hash from your password DB.
+bcrypt.compare(myPlaintextPassword, hash, function(err, result) {
+  // result == true
+});
+bcrypt.compare(someOtherPlaintextPassword, hash, function(err, result) {
+  // result == false
+});
+});
 module.exports = router;
