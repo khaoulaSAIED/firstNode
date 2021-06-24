@@ -207,7 +207,7 @@ router.put('/updateUser/:id', async(req, res, next)=>{
 
 //API envoyer un fichier de type image from one user to another
 
-router.put('/SendEmailToUserWithFile', async(req, res, next)=>{
+router.post('/SendEmailToUserWithFile/:idSender/:idReceiver', async(req, res, next)=>{
     let transporter = nodemailer.createTransport({
       service: 'gmail',
       port: 587,
@@ -217,14 +217,15 @@ router.put('/SendEmailToUserWithFile', async(req, res, next)=>{
        pass: "halima2020@",//mot d passe du sender
       },
     });
-  
+    const sender = await User.findById(req.params.idSender);
+    const receiver = await User.findById(req.params.idReceiver);
     // send mail with defined transport object
     await transporter.sendMail({
-      from: "khaoula.saied@gmail.com", // sender address//req.query.IdSender
-      to: "khaoula.saied@gmail.com", // list of receivers//req.query.IdReceiver
+      from: `${sender.email}` , // sender address//req.query.IdSender
+      to: `${receiver.email}`, // list of receivers//req.query.IdReceiver
       subject: "Hello ✔", // Subject line
       text: "Hello world?", // plain text body
-      html: `<b>Hello world?</b><a href='localhost:3000/${req.file.path}'>click here</a>`, // html body
+      html: `<b>Hello world?</b><a href='localhost:3000/${sender.photo}'>click here</a>`, // html body
       //file: req.query.photo
       //or
       // attachments: [{
@@ -245,14 +246,14 @@ router.put('/SendEmailToUserWithFile', async(req, res, next)=>{
   res.json("Password encrypted!");
   });
 
-  //check if password is correct à voir
-  router.get('/checkPassword/:id', async(req, res, next)=>{
-  // Load hash from your password DB.
-bcrypt.compare(myPlaintextPassword, hash, function(err, result) {
-  // result == true
-});
-bcrypt.compare(someOtherPlaintextPassword, hash, function(err, result) {
-  // result == false
-});
-});
+//   //check if password is correct à voir
+//   router.get('/checkPassword/:id', async(req, res, next)=>{
+//   // Load hash from your password DB.
+// bcrypt.compare(myPlaintextPassword, hash, function(err, result) {
+//   // result == true
+// });
+// bcrypt.compare(someOtherPlaintextPassword, hash, function(err, result) {
+//   // result == false
+// });
+// });
 module.exports = router;
