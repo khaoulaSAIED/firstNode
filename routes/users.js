@@ -50,11 +50,20 @@ router.get('/getUserByNAME', async(req, res, next)=> {
 
 
 //******ADD
-router.post('/addUser', async(req, res, next)=>{
+router.post('/Register', async(req, res, next)=>{
   //ajout dynamique
   const user = new User (req.body);
+  console.log(user.password);
+ bcrypt.hash(user.password, saltRounds, function(err, hash){
+  // Store hash in your password DB.
+  console.log (hash);
+ user.password = hash;
+ console.log(user.password);
+});
+console.log(user);
  await user.save();//pour attendre jusqu à ce que l ajout se termine avant de passer à l instruction suivante
-  //ajout statique
+
+ //ajout statique
   //const user = new User ({
   //  name:"lamia",
   //  age:2
@@ -64,8 +73,22 @@ router.post('/addUser', async(req, res, next)=>{
   res.json(user);
   
 });
+////////////////API LOGIN
+router.get('/Login', async(req, res, next)=> {
+  const user = await User.find({email: req.query.email});
+  console.log(user);
+  if(user)
+  {
+    if (user.password == req.query.password)
+    {res.json("you are logged in!");}
+    else { res.json("Incorrect email or password!");}
+  }
+    
+  
+});
 
 
+//////////////////
 //******ADD-TODO-TO-USER
 router.post('/affectTodoToUser/:userId/:todoId', async(req, res, next)=>{
   const todo = await Todo.findById(req.params.todoId);//Vérifier si TODO exist avant d affecter au user
@@ -235,17 +258,7 @@ router.post('/SendEmailToUserWithFile/:idSender/:idReceiver', async(req, res, ne
     res.json("Photo Sent in Mail!");
   
   });
-  router.put('/addPasswordToUser/:id', async(req, res, next)=>{
-    bcrypt.genSalt(saltRounds, async(err, salt)=> {
-  //    bcrypt.hash(myPlaintextPassword, salt, async(err, hash)=> {
-    bcrypt.hash(res.query.password, salt, async(err, hash)=> {
-          // Store hash in your password DB.
-    await User.findByIdAndUpdate(req.params.id, {password: hash});
-      });
-  });
-  res.json("Password encrypted!");
-  });
-
+ 
 //   //check if password is correct à voir
 //   router.get('/checkPassword/:id', async(req, res, next)=>{
 //   // Load hash from your password DB.
