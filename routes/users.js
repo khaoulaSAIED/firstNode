@@ -4,6 +4,7 @@ const User = require ('../models/userSchema');
 const Todo = require ('../models/todoSchema');
 const nodemailer = require("nodemailer");
 const { getMaxListeners } = require('../models/userSchema');
+const jwt= require('jsonwebtoken');
 //Envoi d image
 var multer  = require('multer')
 const storage = multer.diskStorage({
@@ -53,16 +54,23 @@ router.get('/getUserByNAME', async(req, res, next)=> {
 router.post('/Register', async(req, res, next)=>{
   //ajout dynamique
   const user = new User (req.body);
-  console.log(user.password);
- bcrypt.hash(user.password, saltRounds, function(err, hash){
-  // Store hash in your password DB.
-  console.log (hash);
- user.password = hash;
- console.log(user.password);
-});
-console.log(user);
- await user.save();//pour attendre jusqu à ce que l ajout se termine avant de passer à l instruction suivante
+  console.log(user.email);
+  if (user.email == ""){res.json("Email Required!");}
+  else
+  {
+  const sed = await User.find({email: user.email});
+  console.log(sed);
+  if(sed.length > 0) {res.json("Email already used!");}
+  else if(user.password== "") {res.json("password required!");}
+  else{
+  //cryptage du password
+  const hash = await bcrypt.hash(user.password, saltRounds);
+  user.password = hash;
 
+  //FIN cryptage du password
+ await user.save();//pour attendre jusqu à ce que l ajout se termine avant de passer à l instruction suivante
+}
+}
  //ajout statique
   //const user = new User ({
   //  name:"lamia",
@@ -71,24 +79,25 @@ console.log(user);
 
   //user.save();
   res.json(user);
-  
+
 });
 ////////////////API LOGIN
 router.get('/Login', async(req, res, next)=> {
-  const user = await User.find({email: req.query.email});
-  console.log(user);
+  const user = await User.findOne({email: req.query.email});//find matemchich 5ater tarja3 array
+  console.log (user);
+  //console.log (user.password);
+ 
   if(user)
-  {
-    if (user.password == req.query.password)
+  {const compare = await bcrypt.compare(req.query.password, user.password);
+    console.log(compare);
+     if (compare == true)
+    //if (user.password == req.query.password)
     {res.json("you are logged in!");}
-    else { res.json("Incorrect email or password!");}
+    else { res.json("Incorrect password!");}
   }
-    
+  else { res.json("Incorrect email!");}
   
 });
-
-
-//////////////////
 //******ADD-TODO-TO-USER
 router.post('/affectTodoToUser/:userId/:todoId', async(req, res, next)=>{
   const todo = await Todo.findById(req.params.todoId);//Vérifier si TODO exist avant d affecter au user
