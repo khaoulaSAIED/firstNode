@@ -23,8 +23,6 @@ const upload = multer({
 //Pour crypter
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const myPlaintextPassword = 's0/\/\P4$$w0rD';
-const someOtherPlaintextPassword = 'not_bacon';
 
 //////////FIn crypter
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
@@ -86,13 +84,27 @@ router.get('/Login', async(req, res, next)=> {
   const user = await User.findOne({email: req.query.email});//find matemchich 5ater tarja3 array
   console.log (user);
   //console.log (user.password);
- 
+
   if(user)
   {const compare = await bcrypt.compare(req.query.password, user.password);
     console.log(compare);
      if (compare == true)
     //if (user.password == req.query.password)
-    {res.json("you are logged in!");}
+    {
+   //////////TOKEN
+ const token = jwt.sign(
+  {
+    email: "khaoula.saied@gmail.com",
+  },
+  process.env.JWT_KEY,
+  {
+      expiresIn: "24h"
+  }
+);
+user.token = token
+res.status(200).json({token : token});
+ ///////////
+  }
     else { res.json("Incorrect password!");}
   }
   else { res.json("Incorrect email!");}
