@@ -30,10 +30,26 @@ const saltRounds = 10;
 ///definir les routes sous users
 
 /* GET users listing. */
-router.get('/getUsers', async(req, res, next)=> {
-  const users = await User.find();// si on veut afficher tous les users
-  res.json(users);
+exports.getUsers=(req, res, next)=>{
+  jwt.verify(req.token, process.env.JWT_KEY,function(err,data){
+    if(err)
+    res.status(401).json({
+      message:"forbidden"
+    })
+    else{
+
+  const users = User.find();// si on veut afficher tous les users
+   res.json(users);
+ };
 });
+};
+ router.get('/',ensuretoken,getUsers);
+
+// router.get('/getUsers', async(req, res, next)=> {
+
+//   const users = await User.find();// si on veut afficher tous les users
+//   res.json(users);
+// });
 
 //get a specified user by id 
 router.get('/getUserByID/:id', async(req, res, next)=> {
@@ -56,9 +72,9 @@ router.post('/Register', async(req, res, next)=>{
   if (user.email == ""){res.json("Email Required!");}
   else
   {
-  const sed = await User.find({email: user.email});
-  console.log(sed);
-  if(sed.length > 0) {res.json("Email already used!");}
+  const AlreadyUsed = await User.findOne({email: user.email});
+  console.log(AlreadyUsed);
+  if(AlreadyUsed) {res.json("Email already used!");}
   else if(user.password== "") {res.json("password required!");}
   else{
   //cryptage du password
@@ -82,27 +98,23 @@ router.post('/Register', async(req, res, next)=>{
 ////////////////API LOGIN
 router.get('/Login', async(req, res, next)=> {
   const user = await User.findOne({email: req.query.email});//find matemchich 5ater tarja3 array
-  console.log (user);
-  //console.log (user.password);
-
   if(user)
   {const compare = await bcrypt.compare(req.query.password, user.password);
-    console.log(compare);
      if (compare == true)
-    //if (user.password == req.query.password)
     {
-   //////////TOKEN
+   //////////TOKEN////sign t affecti token lel user
  const token = jwt.sign(
+   //n7ot chnowa yraja3li token
   {
-    email: "khaoula.saied@gmail.com",
+    email: user.email,
   },
   process.env.JWT_KEY,
   {
       expiresIn: "24h"
   }
 );
-user.token = token
-res.status(200).json({token : token});
+//const {body:{user}}=req;
+res.status(200).json({token : token});//retourne token
  ///////////
   }
     else { res.json("Incorrect password!");}
@@ -290,4 +302,15 @@ router.post('/SendEmailToUserWithFile/:idSender/:idReceiver', async(req, res, ne
 //   // result == false
 // });
 // });
+exports.ensuretoken = (req, res, next) =>{
+  const tokHeader = req.headers["authorization"];
+  if (typeof tokHeader!="undefined"){
+    const tokTab =  tokHeader.split(" ");
+    const tokToken = tokTab [1];
+    req.token = tokToken;
+    next();
+  }else{
+    res.sendStatus(403);
+  }
+}
 module.exports = router;
