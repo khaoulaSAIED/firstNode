@@ -32,7 +32,7 @@ const saltRounds = 10;
 
 
 ///definir les routes sous users
-router.get('/getUsers',controllers.ensuretoken,controllers.getUsers);
+router.get('/getUsers', userController.ensuretoken, userController.getUsers);
 /* GET users listing. */
 // exports.getUsers=(req, res, next)=>{
 //   jwt.verify(req.token, process.env.JWT_KEY,function(err,data){
