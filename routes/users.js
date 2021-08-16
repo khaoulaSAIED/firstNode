@@ -5,6 +5,7 @@ const Todo = require ('../models/todoSchema');
 const nodemailer = require("nodemailer");
 const { getMaxListeners } = require('../models/userSchema');
 const jwt= require('jsonwebtoken');
+var userController = require('../config/controllers');
 //Envoi d image
 var multer  = require('multer')
 const storage = multer.diskStorage({
@@ -27,23 +28,26 @@ const saltRounds = 10;
 //////////FIn crypter
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
 
+
+
+
 ///definir les routes sous users
-
+router.get('/getUsers',controllers.ensuretoken,controllers.getUsers);
 /* GET users listing. */
-exports.getUsers=(req, res, next)=>{
-  jwt.verify(req.token, process.env.JWT_KEY,function(err,data){
-    if(err)
-    res.status(401).json({
-      message:"forbidden"
-    })
-    else{
+// exports.getUsers=(req, res, next)=>{
+//   jwt.verify(req.token, process.env.JWT_KEY,function(err,data){
+//     if(err)
+//     res.status(401).json({
+//       message:"forbidden"
+//     })
+//     else{
 
-  const users = User.find();// si on veut afficher tous les users
-   res.json(users);
- };
-});
-};
- router.get('/',ensuretoken,getUsers);
+//   const users = User.find();// si on veut afficher tous les users
+//    res.json(users);
+//  };
+// });
+// };
+//  router.get('/',ensuretoken,getUsers);
 
 // router.get('/getUsers', async(req, res, next)=> {
 
@@ -302,15 +306,5 @@ router.post('/SendEmailToUserWithFile/:idSender/:idReceiver', async(req, res, ne
 //   // result == false
 // });
 // });
-exports.ensuretoken = (req, res, next) =>{
-  const tokHeader = req.headers["authorization"];
-  if (typeof tokHeader!="undefined"){
-    const tokTab =  tokHeader.split(" ");
-    const tokToken = tokTab [1];
-    req.token = tokToken;
-    next();
-  }else{
-    res.sendStatus(403);
-  }
-}
+
 module.exports = router;
